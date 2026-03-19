@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+body {
+  background-color: #121212;
+  color: white;
+  overflow-x: hidden;
+  font-family: var(--font-sans);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
+/* Minecraft UI Styles */
+.mc-button {
+  background-color: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 4px solid rgba(0, 0, 0, 0.3);
+  color: #ffffff;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px;
+}
+
+.mc-button:hover {
+  background-color: #333333;
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.mc-button:active {
+  border-bottom-width: 1px;
+  transform: translateY(2px);
+}
+
+.mc-button-green {
+  background-color: #10b981;
+  border-color: #059669;
+  border-bottom-color: #064e3b;
+  color: #ffffff;
+}
+
+.mc-button-green:hover {
+  background-color: #059669;
+}
+
+.mc-button-blue {
+  background-color: #3b82f6;
+  border-color: #2563eb;
+  border-bottom-color: #1e3a8a;
+  color: #ffffff;
+}
+
+.mc-button-blue:hover {
+  background-color: #2563eb;
+}
+
+.mc-button-red {
+  background-color: #ef4444;
+  border-color: #dc2626;
+  border-bottom-color: #7f1d1d;
+  color: #ffffff;
+}
+
+.mc-button-red:hover {
+  background-color: #dc2626;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
