@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+import * as dotenv from "dotenv";
 dotenv.config();
 
 // 🔥 DEBUG
@@ -8,12 +8,12 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import mongoose from "mongoose";
 import cors from "cors";
-import midtransClient from "midtrans-client";
+const midtransClient = require("midtrans-client");
 import { Rcon } from "rcon-client";
 import Database from "better-sqlite3";
-import path from "path";
+import * as path from "path";
 import { fileURLToPath } from "url";
-import bcrypt from "bcryptjs";
+import * as bcrypt from "bcryptjs";
 import { initializeApp } from "firebase/app";
 import {
   getFirestore,
@@ -410,7 +410,7 @@ if (
 
 const snap = new midtransClient.Snap({
   isProduction: false,
-  serverKey: process.env.MIDTRANS_SERVER_KEY,
+  serverKey: process.env.MIDTRANS_SERVER_KEY as string,
 });
 
 // Products (Hardcoded for example)
@@ -618,11 +618,14 @@ async function sendRconCommand(command: string) {
       port: parseInt(process.env.RCON_PORT || "25575"),
       password: process.env.RCON_PASSWORD || "password",
     });
+
     const response = await rcon.send(command);
     console.log("RCON Response:", response);
+
     await rcon.end();
     return response;
-  } catch (error) {
+
+  } catch (error: any) {
     console.error("RCON Error:", error);
     throw error;
   }
@@ -1509,9 +1512,11 @@ async function seedData() {
     if ((await Setting.countDocuments()) === 0)
       await Setting.insertMany(settings);
   } else {
-    const catCount = sqlite
-      .prepare("SELECT count(*) as count FROM categories")
-      .get().count;
+const result = sqlite
+  .prepare("SELECT count(*) as count FROM categories")
+  .get() as { count: number };
+
+const catCount = result.count;
     if (catCount === 0) {
       const stmt = sqlite.prepare(
         "INSERT INTO categories (id, name, icon) VALUES (?, ?, ?)",
@@ -1524,9 +1529,11 @@ async function seedData() {
       );
       categories.forEach((c) => stmt.run(c.icon, c.id));
     }
-    const prodCount = sqlite
-      .prepare("SELECT count(*) as count FROM products")
-      .get().count;
+const prodRow = sqlite
+  .prepare("SELECT count(*) as count FROM products")
+  .get() as { count: number };
+
+const prodCount = prodRow.count;
     if (prodCount === 0) {
       const stmt = sqlite.prepare(
         "INSERT INTO products (id, name, price, category, command, description, perks, commands, image, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -1558,18 +1565,26 @@ async function seedData() {
       );
       products.forEach((p, index) => orderStmt.run(index, p.id));
     }
-    const coupCount = sqlite
-      .prepare("SELECT count(*) as count FROM coupons")
-      .get().count;
+
+const coupRow = sqlite
+  .prepare("SELECT count(*) as count FROM coupons")
+  .get() as { count: number };
+
+const coupCount = coupRow.count;
+
     if (coupCount === 0) {
       const stmt = sqlite.prepare(
         "INSERT INTO coupons (code, discount, active) VALUES (?, ?, ?)",
       );
       coupons.forEach((c) => stmt.run(c.code, c.discount, c.active ? 1 : 0));
     }
-    const settCount = sqlite
-      .prepare("SELECT count(*) as count FROM settings")
-      .get().count;
+    
+const settRow = sqlite
+  .prepare("SELECT count(*) as count FROM settings")
+  .get() as { count: number };
+
+const settCount = settRow.count;
+
     if (settCount === 0) {
       const stmt = sqlite.prepare(
         "INSERT INTO settings (key, value) VALUES (?, ?)",
