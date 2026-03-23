@@ -3,10 +3,10 @@
     "target": "ES2022",
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
-    "module": "Node16",
+    "module": "ESNext",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
-    "moduleResolution": "node16",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "types": ["node"],
@@ -17,7 +17,7 @@
     "paths": {
       "@/*": ["./*"]
     },
-    
+
     "noEmit": false,
     "outDir": "./dist"
   }
