@@ -17,6 +17,7 @@
     "paths": {
       "@/*": ["./*"]
     },
+    
     "noEmit": false,
     "outDir": "./dist"
   }
