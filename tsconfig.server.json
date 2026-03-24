@@ -6,7 +6,9 @@
     "outDir": "dist",
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "strict": true
+    "strict": true,
+    "skipLibCheck": true
   },
-  "include": ["server.ts"]
+  "include": ["server.ts"],
+  "exclude": ["node_modules"]
 }
