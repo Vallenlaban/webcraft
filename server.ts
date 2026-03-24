@@ -1615,12 +1615,12 @@ async function setupVite() {
     app.use(vite.middlewares);
   } else {
     // ✅ serve React build
-    app.use(express.static(path.join(__dirname, "dist")));
+    app.use(express.static(path.join(__dirname, "client")));
 
     // ✅ SPA fallback
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(__dirname, "dist", "index.html"));
-    });
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "client", "index.html"));
+});
   }
 
   app.listen(PORT, "0.0.0.0", () => {
