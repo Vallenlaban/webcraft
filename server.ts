@@ -5,13 +5,11 @@ dotenv.config();
 console.log("SERVER KEY:", process.env.MIDTRANS_SERVER_KEY);
 
 import express from "express";
-import { createServer as createViteServer } from "vite";
 import mongoose from "mongoose";
 import cors from "cors";
 const midtransClient = require("midtrans-client");
 import { Rcon } from "rcon-client";
 import Database from "better-sqlite3";
-import * as path from "path";
 import { fileURLToPath } from "url";
 import * as bcrypt from "bcryptjs";
 import { initializeApp } from "firebase/app";
@@ -28,8 +26,9 @@ dotenv.config();
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import path from "path";
+
+const __dirname = path.resolve();
 
 // Firebase (used only to persist admin panel changes)
 const firebaseConfig = {
@@ -1606,12 +1605,7 @@ async function setupVite() {
   await seedData();
 
   if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-
-    app.use(vite.middlewares);
+    
   } else {
     // ✅ serve React build
     app.use(express.static(path.join(__dirname, "dist")));
