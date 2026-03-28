@@ -209,10 +209,10 @@ export default function App() {
     const fetchData = async () => {
       try {
         const [prodRes, catRes, settRes, coupRes] = await Promise.all([
-          fetch("/api/products"),
-          fetch("/api/categories"),
-          fetch("/api/settings"),
-          fetch("/api/coupons"),
+          fetch(`${import.meta.env.VITE_API_URL}/api/products`),
+          fetch(`${import.meta.env.VITE_API_URL}/api/categories`),
+          fetch(`${import.meta.env.VITE_API_URL}/api/settings`),
+          fetch(`${import.meta.env.VITE_API_URL}/api/coupons`),
         ]);
 
         if (!prodRes.ok || !catRes.ok || !settRes.ok || !coupRes.ok) {
