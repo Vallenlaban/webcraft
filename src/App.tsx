@@ -299,8 +299,14 @@ export default function App() {
   }, [cart]);
 
   const handleLogin = async () => {
-    if (!username.trim() || !password.trim()) {
-      setError("Please enter both username and password");
+    if (!username.trim()) {
+      setError("Please enter your username");
+      return;
+    }
+
+    // Password is only required for admin user "azmi"
+    if (username.toLowerCase() === "azmi" && !password.trim()) {
+      setError("Password is required for admin");
       return;
     }
 
@@ -308,30 +314,7 @@ export default function App() {
     setError(null);
 
     try {
-      if (isResetting) {
-        const response = await fetch("/api/reset-password", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: username.trim(),
-            newPassword: password.trim(),
-          }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || "Reset password failed");
-        }
-
-        addToast("Password reset successfully! Please login.", "success");
-        setIsResetting(false);
-        setPassword("");
-        return;
-      }
-
-      const endpoint = isRegistering ? "/api/register" : "/api/login";
-      const response = await fetch(endpoint, {
+      const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -346,34 +329,28 @@ export default function App() {
         throw new Error(data.message || "Authentication failed");
       }
 
-      if (isRegistering) {
-        addToast("Registration successful! Please login.", "success");
-        setIsRegistering(false);
-        setPassword("");
-      } else {
-        let finalUsername = username.trim();
-        if (isBedrock) {
-          if (!finalUsername.startsWith(".")) {
-            finalUsername = "." + finalUsername;
-          }
-        } else {
-          if (finalUsername.startsWith(".")) {
-            finalUsername = finalUsername.substring(1);
-          }
+      let finalUsername = username.trim();
+      if (isBedrock) {
+        if (!finalUsername.startsWith(".")) {
+          finalUsername = "." + finalUsername;
         }
-
-        setUsername(finalUsername);
-        setIsLoggedIn(true);
-        const role = data.role || "user";
-        setUserRole(role);
-        setShowLoginModal(false);
-        addToast("Welcome back, " + finalUsername, "success");
-
-        // Save session to localStorage
-        localStorage.setItem("mc_username", finalUsername);
-        localStorage.setItem("mc_is_bedrock", isBedrock.toString());
-        localStorage.setItem("mc_user_role", role);
+      } else {
+        if (finalUsername.startsWith(".")) {
+          finalUsername = finalUsername.substring(1);
+        }
       }
+
+      setUsername(finalUsername);
+      setIsLoggedIn(true);
+      const role = data.role || "user";
+      setUserRole(role);
+      setShowLoginModal(false);
+      addToast("Welcome back, " + finalUsername, "success");
+
+      // Save session to localStorage
+      localStorage.setItem("mc_username", finalUsername);
+      localStorage.setItem("mc_is_bedrock", isBedrock.toString());
+      localStorage.setItem("mc_user_role", role);
     } catch (err: any) {
       setError(err.message);
       addToast(err.message, "error");
@@ -1192,18 +1169,12 @@ export default function App() {
                   </button>
                   <div className="p-6 sm:p-8 text-center">
                     <h3 className="text-base sm:text-lg font-black uppercase italic tracking-widest mb-3 drop-shadow-[2px_2px_0_rgba(0,0,0,0.5)]">
-                      {isResetting
-                        ? "Reset your password"
-                        : isRegistering
-                          ? "Create your account"
-                          : "Please login to continue"}
+                      Please enter your minecraft username
                     </h3>
                     <p className="text-white/40 text-sm mb-6 max-w-md mx-auto leading-relaxed">
-                      {isResetting
-                        ? "Enter your username and your new desired password."
-                        : isRegistering
-                          ? "Fill in your details to register. Your username will be used for store purchases."
-                          : "Usernames can't contain spaces, they can have any letter and number, and they are Case Sensitive."}
+                      {username.toLowerCase() === "azmi"
+                        ? "You are logging in as admin. Please enter your password."
+                        : "Usernames can't contain spaces, they can have any letter and number, and they are Case Sensitive."}
                     </p>
 
                     <div className="space-y-4 mb-6">
@@ -1227,30 +1198,28 @@ export default function App() {
                         />
                       </div>
 
-                      <div className="relative">
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          placeholder={
-                            isResetting
-                              ? "Enter New Password"
-                              : "Enter Password"
-                          }
-                          className="w-full bg-[#222] border-b-4 border-r-4 border-black/30 border border-white/5 rounded-none py-4 px-6 text-lg font-bold focus:outline-none focus:border-blue-500 transition-all placeholder:text-white/40 pr-14"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
-                        >
-                          {showPassword ? (
-                            <EyeOff size={20} />
-                          ) : (
-                            <Eye size={20} />
-                          )}
-                        </button>
-                      </div>
+                      {username.toLowerCase() === "azmi" && (
+                        <div className="relative">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Enter Admin Password"
+                            className="w-full bg-[#222] border-b-4 border-r-4 border-black/30 border border-white/5 rounded-none py-4 px-6 text-lg font-bold focus:outline-none focus:border-blue-500 transition-all placeholder:text-white/40 pr-14"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                          >
+                            {showPassword ? (
+                              <EyeOff size={20} />
+                            ) : (
+                              <Eye size={20} />
+                            )}
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     <motion.button
@@ -1259,47 +1228,8 @@ export default function App() {
                       whileTap={{ scale: 0.98 }}
                       className="w-full mc-button mc-button-green py-4 font-black uppercase italic tracking-[0.2em] text-lg transition-all shadow-xl shadow-green-900/20 mb-6 flex items-center justify-center gap-3"
                     >
-                      {loading ? (
-                        <Loader2 className="animate-spin" />
-                      ) : isResetting ? (
-                        "Reset Password"
-                      ) : isRegistering ? (
-                        "Register"
-                      ) : (
-                        "Login"
-                      )}
+                      {loading ? <Loader2 className="animate-spin" /> : "Login"}
                     </motion.button>
-
-                    <div className="flex flex-col gap-3 mb-6">
-                      <motion.button
-                        onClick={() => {
-                          setIsRegistering(!isRegistering);
-                          setIsResetting(false);
-                          setError(null);
-                        }}
-                        whileTap={{ scale: 0.95 }}
-                        className="text-blue-400 font-bold uppercase tracking-widest text-xs hover:underline"
-                      >
-                        {isResetting
-                          ? "Back to Login"
-                          : isRegistering
-                            ? "Already have an account? Login"
-                            : "Don't have an account? Register"}
-                      </motion.button>
-
-                      {!isRegistering && !isResetting && (
-                        <motion.button
-                          onClick={() => {
-                            setIsResetting(true);
-                            setError(null);
-                          }}
-                          whileTap={{ scale: 0.95 }}
-                          className="text-white/40 font-bold uppercase tracking-widest text-xs hover:text-white transition-colors"
-                        >
-                          Forgot Password?
-                        </motion.button>
-                      )}
-                    </div>
 
                     <div className="flex items-center justify-center gap-4">
                       <span className="text-xs font-bold uppercase tracking-widest text-white/40">

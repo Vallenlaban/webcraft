@@ -625,7 +625,6 @@ async function sendRconCommand(command: string) {
 
     await rcon.end();
     return response;
-
   } catch (error: any) {
     console.error("RCON Error:", error);
     throw error;
@@ -1149,13 +1148,17 @@ app.post("/api/register", async (req, res) => {
 app.post("/api/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password) {
-      return res
-        .status(400)
-        .json({ message: "Username and password are required" });
+    if (!username) {
+      return res.status(400).json({ message: "Username is required" });
     }
 
+    // Admin user "azmi" requires password "adminn"
     if (username === "azmi") {
+      if (!password) {
+        return res
+          .status(400)
+          .json({ message: "Password is required for admin" });
+      }
       if (password === "adminn") {
         return res.json({
           message: "Login successful",
@@ -1167,28 +1170,58 @@ app.post("/api/login", async (req, res) => {
       }
     }
 
+    // Regular users - no password required, auto-login or register
     let user: any = null;
     if (useMongoDB) {
       user = await User.findOne({ username });
+      if (!user) {
+        // Auto-create user if doesn't exist
+        try {
+          const newUser = new User({
+            username,
+            password: "user",
+            role: "user",
+          });
+          await newUser.save();
+          user = newUser;
+        } catch (createErr: any) {
+          console.warn("MongoDB user creation error:", createErr.message);
+          // Silently handle - user will be created next time or use as is
+          user = { username, role: "user" };
+        }
+      }
     } else {
-      user = sqlite
-        .prepare("SELECT * FROM users WHERE username = ?")
-        .get(username);
-    }
+      // SQLite path
+      try {
+        user = sqlite
+          .prepare("SELECT * FROM users WHERE username = ?")
+          .get(username);
 
-    if (!user) {
-      return res.status(401).json({ message: "Invalid username" });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid password" });
+        if (!user) {
+          // Auto-create user if doesn't exist in SQLite
+          try {
+            const stmt = sqlite.prepare(
+              "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
+            );
+            stmt.run(username, "user", "user");
+            console.log("Created new user:", username);
+          } catch (insertErr: any) {
+            console.warn("SQLite user creation warning:", insertErr.message);
+            // Continue anyway - user can still login even if creation failed
+          }
+          user = { username, role: "user" };
+        }
+      } catch (selectErr: any) {
+        console.error("SQLite user select error:", selectErr.message);
+        // Fallback - still allow login
+        user = { username, role: "user" };
+      }
     }
 
     res.json({
       message: "Login successful",
-      username: user.username,
-      role: "user",
+      username: user.username || username,
+      role: user.role || "user",
     });
   } catch (error: any) {
     console.error("Login Error:", error);
@@ -1513,11 +1546,11 @@ async function seedData() {
     if ((await Setting.countDocuments()) === 0)
       await Setting.insertMany(settings);
   } else {
-const result = sqlite
-  .prepare("SELECT count(*) as count FROM categories")
-  .get() as { count: number };
+    const result = sqlite
+      .prepare("SELECT count(*) as count FROM categories")
+      .get() as { count: number };
 
-const catCount = result.count;
+    const catCount = result.count;
     if (catCount === 0) {
       const stmt = sqlite.prepare(
         "INSERT INTO categories (id, name, icon) VALUES (?, ?, ?)",
@@ -1530,11 +1563,11 @@ const catCount = result.count;
       );
       categories.forEach((c) => stmt.run(c.icon, c.id));
     }
-const prodRow = sqlite
-  .prepare("SELECT count(*) as count FROM products")
-  .get() as { count: number };
+    const prodRow = sqlite
+      .prepare("SELECT count(*) as count FROM products")
+      .get() as { count: number };
 
-const prodCount = prodRow.count;
+    const prodCount = prodRow.count;
     if (prodCount === 0) {
       const stmt = sqlite.prepare(
         "INSERT INTO products (id, name, price, category, command, description, perks, commands, image, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -1567,11 +1600,11 @@ const prodCount = prodRow.count;
       products.forEach((p, index) => orderStmt.run(index, p.id));
     }
 
-const coupRow = sqlite
-  .prepare("SELECT count(*) as count FROM coupons")
-  .get() as { count: number };
+    const coupRow = sqlite
+      .prepare("SELECT count(*) as count FROM coupons")
+      .get() as { count: number };
 
-const coupCount = coupRow.count;
+    const coupCount = coupRow.count;
 
     if (coupCount === 0) {
       const stmt = sqlite.prepare(
@@ -1579,12 +1612,12 @@ const coupCount = coupRow.count;
       );
       coupons.forEach((c) => stmt.run(c.code, c.discount, c.active ? 1 : 0));
     }
-    
-const settRow = sqlite
-  .prepare("SELECT count(*) as count FROM settings")
-  .get() as { count: number };
 
-const settCount = settRow.count;
+    const settRow = sqlite
+      .prepare("SELECT count(*) as count FROM settings")
+      .get() as { count: number };
+
+    const settCount = settRow.count;
 
     if (settCount === 0) {
       const stmt = sqlite.prepare(
@@ -1618,9 +1651,9 @@ async function setupVite() {
     app.use(express.static(path.join(__dirname, "client")));
 
     // ✅ SPA fallback
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "client", "index.html"));
-});
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(__dirname, "client", "index.html"));
+    });
   }
 
   app.listen(PORT, "0.0.0.0", () => {
