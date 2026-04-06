@@ -105,6 +105,8 @@ export default function App() {
   );
   const recentPaymentsRef = useRef<HTMLDivElement>(null);
 
+  const apiBaseUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
+
   const sortedCategories = useMemo(() => {
     const order = ["Skyblock Ranks", "Survival Ranks", "Coins"].map((n) =>
       n.toLowerCase(),
@@ -206,13 +208,19 @@ export default function App() {
   };
 
   useEffect(() => {
+    const apiUrl = apiBaseUrl;
+    console.log("[App] API URL:", apiUrl || "(empty, using relative paths)");
+    console.log("[App] Window origin:", window.location.origin);
+
+    const fetchApi = (path: string) => fetch(`${apiUrl}${path}`);
+
     const fetchData = async () => {
       try {
         const [prodRes, catRes, settRes, coupRes] = await Promise.all([
-          fetch(`${import.meta.env.VITE_API_URL}/api/products`),
-          fetch(`${import.meta.env.VITE_API_URL}/api/categories`),
-          fetch(`${import.meta.env.VITE_API_URL}/api/settings`),
-          fetch(`${import.meta.env.VITE_API_URL}/api/coupons`),
+          fetchApi("/api/products"),
+          fetchApi("/api/categories"),
+          fetchApi("/api/settings"),
+          fetchApi("/api/coupons"),
         ]);
 
         if (!prodRes.ok || !catRes.ok || !settRes.ok || !coupRes.ok) {
@@ -231,6 +239,7 @@ export default function App() {
 
         if (catData.length > 0) {
           setSelectedCategory(catData[0].name);
+          setIsHome(false);
         }
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -242,7 +251,7 @@ export default function App() {
     let script: HTMLScriptElement | null = null;
 
     // Fetch Midtrans config and load script
-    fetch("/api/midtrans-config")
+    fetchApi("/api/midtrans-config")
       .then((res) => res.json())
       .then((config) => {
         if (!config.isConfigured) {
