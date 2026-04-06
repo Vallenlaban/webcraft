@@ -460,7 +460,7 @@ var snap = new midtrans_client_1.default.Snap({
 var PRODUCTS = [
     {
         id: "sb_gold",
-        name: "🟡 GOLD",
+        name: "GOLD",
         price: 15000,
         category: "Skyblock Ranks",
         command: "lp user {username} parent add gold",
@@ -1483,7 +1483,7 @@ function seedData() {
                     products = [
                         {
                             id: "sb_gold",
-                            name: "🟡 GOLD",
+                            name: "GOLD",
                             price: 15000,
                             category: "Skyblock Ranks",
                             command: "lp user {username} parent add gold",

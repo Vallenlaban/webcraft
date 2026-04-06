@@ -376,22 +376,43 @@ export default function App() {
   };
 
   const addToCart = (product: Product) => {
+    // Cek login
     if (!isLoggedIn) {
       setShowLoginModal(true);
       return;
     }
-    setCart((prev) => {
-      const existing = prev.find((item) => item.product.id === product.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item,
-        );
-      }
-      return [...prev, { product, quantity: 1 }];
-    });
-    addToast(`${product.name} added to cart!`);
+
+    // FITUR: Jika sudah ada di keranjang, klik lagi akan MENGHAPUS (Toggle)
+    const isInCart = cart.some(item => item.product.id === product.id);
+    if (isInCart) {
+      removeFromCart(product.id);
+      return;
+    }
+
+    const categoryName = product.category.toLowerCase();
+    const isCoin = categoryName.includes('coin');
+    const isSkyblockRank = categoryName.includes('skyblock rank');
+    const isSurvivalRank = categoryName.includes('survival rank');
+
+    if (isCoin) {
+      // FITUR: Kategori COIN bisa beli banyak (unlimited)
+      setCart(prev => [...prev, { product, quantity: 1 }]);
+    } else if (isSkyblockRank || isSurvivalRank) {
+      // FITUR: Kategori RANK hanya boleh 1 (otomatis ganti jika pilih yang lain)
+      setCart(prev => {
+        const filtered = prev.filter(item => item.product.category.toLowerCase() !== categoryName);
+        return [...filtered, { product, quantity: 1 }];
+      });
+    } else {
+      // Default untuk kategori lain (1 per kategori)
+      setCart(prev => {
+        const filtered = prev.filter(item => item.product.category !== product.category);
+        return [...filtered, { product, quantity: 1 }];
+      });
+    }
+    
+    // FITUR: OTOMATIS BUKA KERANJANG & Tanpa Notifikasi (Toast dihapus)
+    setIsCartOpen(true);
   };
 
   const updateQuantity = (productId: string, delta: number) => {
@@ -868,16 +889,26 @@ export default function App() {
                             <motion.button
                               onClick={() => addToCart(product)}
                               whileTap={{ scale: 0.95 }}
-                              className="flex-grow mc-button mc-button-green py-3 font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-3 text-sm"
+                              // FITUR: Jika isInCart true, pakai warna MERAH (mc-button-red), jika false pakai HIJAU
+                              className={`flex-grow mc-button ${cart.some(item => item.product.id === product.id) ? 'mc-button-red' : 'mc-button-green'} py-3 font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-3 text-sm`}
                             >
-                              <div className="w-5 h-5 relative flex items-center justify-center">
-                                {/* Minecart Icon */}
-                                <div className="w-4 h-2.5 bg-[#7c7c7c] border-x-2 border-b-2 border-black/60 relative">
-                                  <div className="absolute -bottom-1 left-0 w-1 h-1 bg-[#333] rounded-full border border-black/20"></div>
-                                  <div className="absolute -bottom-1 right-0 w-1 h-1 bg-[#333] rounded-full border border-black/20"></div>
-                                </div>
-                              </div>
-                              Add to cart
+                              {cart.some(item => item.product.id === product.id) ? (
+                                <>
+                                  <Trash2 size={18} />
+                                  REMOVE
+                                </>
+                              ) : (
+                                <>
+                                  <div className="w-5 h-5 relative flex items-center justify-center">
+                                    {/* Minecart Icon */}
+                                    <div className="w-4 h-2.5 bg-[#7c7c7c] border-x-2 border-b-2 border-black/60 relative">
+                                      <div className="absolute -bottom-1 left-0 w-1 h-1 bg-[#333] rounded-full border border-black/20"></div>
+                                      <div className="absolute -bottom-1 right-0 w-1 h-1 bg-[#333] rounded-full border border-black/20"></div>
+                                    </div>
+                                  </div>
+                                  Add to cart
+                                </>
+                              )}
                             </motion.button>
                           </div>
                         </motion.div>
@@ -1480,35 +1511,12 @@ export default function App() {
                             </p>
 
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center bg-[#121212] rounded-lg border border-white/5 overflow-hidden">
-                                <motion.button
-                                  onClick={() =>
-                                    updateQuantity(item.product.id, -1)
-                                  }
-                                  whileTap={{ scale: 0.9 }}
-                                  className="p-1.5 hover:bg-white/5 transition-colors text-white/50"
-                                >
-                                  <Minus size={14} />
-                                </motion.button>
-                                <span className="w-8 text-center font-bold text-xs">
-                                  {item.quantity}
-                                </span>
-                                <motion.button
-                                  onClick={() =>
-                                    updateQuantity(item.product.id, 1)
-                                  }
-                                  whileTap={{ scale: 0.9 }}
-                                  className="p-1.5 hover:bg-white/5 transition-colors text-white/50"
-                                >
-                                  <Plus size={14} />
-                                </motion.button>
+                              <div className="flex items-center bg-[#121212] rounded-lg border border-white/5 px-3 py-1.5">
+                                {/* FITUR: Menampilkan teks Qty: 1 */}
+                                <span className="text-white/50 text-xs font-bold uppercase tracking-widest mr-2">Qty:</span>
+                                <span className="font-bold text-xs">{item.quantity}</span> 
                               </div>
-                              <p className="font-bold text-blue-400">
-                                Rp{" "}
-                                {(
-                                  item.product.price * item.quantity
-                                ).toLocaleString()}
-                              </p>
+                              <p className="font-bold text-blue-400">Rp {(item.product.price * item.quantity).toLocaleString()}</p>
                             </div>
                           </div>
                         </div>
